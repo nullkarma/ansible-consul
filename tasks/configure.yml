@@ -1,0 +1,27 @@
+---
+
+- name: Configure consul
+  when: not consul_single_config
+  block:
+  - name: Generate Base Config
+    template:
+      src: base.json.j2
+      dest: "{{ consul_conf_dir }}/base.json"
+    notify:
+      - systemctl restart consul
+
+  - name: Configure consul acl
+    template:
+      src: acl.json.j2
+      dest: "{{ consul_conf_dir }}/acl.json"
+    when: consul_acl_enable
+    notify:
+      - systemctl restart consul
+
+- name: Configure consul
+  template:
+    src: config.json.j2
+    dest: "{{ consul_conf_dir }}/config.json"
+  notify:
+    - systemctl restart consul
+

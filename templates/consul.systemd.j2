@@ -1,0 +1,15 @@
+[Unit]
+Description=consul
+After=network.target
+
+[Service]
+User={{ consul_user }}
+ExecStart={{ consul_bin_dir }}/consul agent -config-dir={{ consul_conf_dir }}
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill $MAINPID
+TimeoutStopSec=600
+Restart=always
+
+LimitNOFILE=65536
+[Install]
+WantedBy=multi-user.target

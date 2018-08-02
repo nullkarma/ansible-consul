@@ -1,0 +1,31 @@
+---
+
+consul_version: 1.2.0
+consul_base_url: "https://releases.hashicorp.com/consul/{{ consul_version }}"
+
+consul_user: consul
+consul_group: consul
+
+consul_home_dir: /opt/consul
+consul_data_dir: /opt/consul/data
+consul_conf_dir: /etc/consul.d
+
+consul_manage_service: False
+
+# Config
+
+consul_acl_enable: False
+
+consul_base:
+  bind_addr: 0.0.0.0
+  datacenter: dc1
+  enable_syslog: True
+  node_name: "{{ ansible_hostname }}"
+  data_dir: "{{ consul_data_dir }}"
+
+consul_single_config: False
+
+consul_config:
+  server: True
+  bootstrap_expect: 1
+

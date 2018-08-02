@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  remote_user: root
+  roles:
+    - consul
+  vars:
+    consul_single_config: true
+    consul_config:
+      data_dir: "/opt/consul/data"
+      bind_addr: "0.0.0.0"
+      node_name: "consul"
+      datacenter: "dc1"
+      enable_syslog: true
+      server: true
+      bootstrap_expect: 1

@@ -1,0 +1,64 @@
+---
+
+- name: Create user
+  user:
+    name: "{{ consul_user }}"
+    home: "{{ consul_home_dir }}"
+    create_home: yes
+    system: yes
+
+- set_fact:
+    consul_bin_dir: "{{ consul_home_dir }}/bin"
+
+- name: Create directories
+  file:
+    path: "{{ item }}"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    state: directory
+  with_items:
+    - "{{ consul_home_dir }}"
+    - "{{ consul_conf_dir }}"
+    - "{{ consul_data_dir }}"
+    - "{{ consul_bin_dir }}"
+
+- set_fact:
+    consul_work_dir: "{{ consul_home_dir }}/versions/{{ consul_version }}"
+
+- name: Check if version is already installed
+  stat:
+    path: "{{ consul_work_dir }}/consul"
+  register: consul
+
+- name: create version dir
+  file:
+    path: "{{ consul_work_dir }}"
+    state: directory
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+  when: not consul.stat.exists
+
+- name: Download consul
+  get_url:
+    url: "{{ consul_base_url }}/consul_{{ consul_version }}_linux_amd64.zip"
+    dest: "/tmp/consul.{{ consul_version }}.zip"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    remote_src: yes
+  when: not consul.stat.exists
+
+- name: Unarchive consul
+  unarchive:
+    src: "/tmp/consul.{{ consul_version }}.zip"
+    dest: "{{ consul_work_dir }}"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    remote_src: yes
+  when: not consul.stat.exists
+
+- name: Create link to current version
+  file:
+    src: "{{ consul_work_dir }}/consul"
+    path: "{{ consul_bin_dir }}/consul"
+    state: link
+

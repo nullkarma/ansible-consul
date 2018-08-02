@@ -1,0 +1,30 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: ansible_playbook
+  roles_path: .
+  role_name: consul
+  hosts: localhost
+  ansible_connection: ssh
+  ansible_diff: true
+  require_chef_for_busser: false
+  require_ansible_repo: false
+  require_ansible_omnibus: false
+  require_ansible_source: false
+  require_pip: true
+  ansible_sudo: true
+  sudo_command: sudo -E -H
+  ignore_paths_from_root:
+  - .git
+
+platforms:
+  - name: centos-7.3
+    provision_command:
+    - yum -y install python-pip unzip bind-utils tree
+
+suites:
+  - name: server
+    provisioner:
+      playbook: tests/server.yml

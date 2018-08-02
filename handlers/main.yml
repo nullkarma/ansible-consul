@@ -1,0 +1,20 @@
+---
+
+- name: systemctl daemon-reload
+  systemd:
+    daemon_reload: True
+
+- name: systemctl start consul
+  systemd:
+    name: consul.service
+    state: started
+    enabled: yes
+  when: consul_manage_service
+
+- name: systemctl restart consul
+  systemd:
+    name: consul.service
+    state: restarted
+    enabled: yes
+  when: consul_manage_service
+
