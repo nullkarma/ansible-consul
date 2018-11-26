@@ -27,3 +27,9 @@
       dest: /usr/lib/systemd/system/consul.service
     notify:
     - systemctl daemon-reload
+
+- name: Start Consul
+  systemd:
+    name: consul
+    state: started
+  when: consul_manage_service
