@@ -1,0 +1,8 @@
+---
+
+- name: Configure Services
+  template:
+    src: service.json.j2
+    dest: "{{ consul_conf_dir }}/service-{{ item.name }}.json"
+  loop: "{{ consul_services }}"
+  notify: systemctl restart consul 

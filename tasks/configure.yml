@@ -1,27 +1,127 @@
 ---
 
-- name: Configure consul
-  when: not consul_single_config
+- set_fact:
+    acl_configured: false
+  tags: always
+
+- set_fact:
+    consul_host: "{{ groups['consul-servers'] | first }}"
+  tags: always
+
+- set_fact:
+    consul_server: "{% if consul_config.server is defined %}{{ consul_config.server }}{% else %}false{% endif %}"
+  tags: always
+
+- set_fact:
+    acl_enabled: "{% if consul_config.acl.enabled is defined %}{{ consul_config.acl.enabled }}{% else %}false{% endif %}"
+  tags: always
+
+- name: Check if config exists
+  stat:
+    path: "{{ consul_conf_dir }}/config.json"
+  register: s_consul_conf
+
+- set_fact:
+    consul_port: "{% if consul_config.ports.https is defined %}{{ consul_config.ports.https }}{% else %}{{ consul_config.ports.http }}{% endif %}"
+
+- set_fact:
+    consul_schema: "{% if consul_config.ports.https is defined %}https{% else %}http{% endif %}"
+
+  # Since we're injecting the ACL agent and default token into the config
+  # we want to merge an existing consul config into the new one
+  # to not trigger a system restart on every ansible-playbook run
+- name: Merge remote config with generated config
+  when: s_consul_conf.stat.exists
   block:
-  - name: Generate Base Config
-    template:
-      src: base.json.j2
-      dest: "{{ consul_conf_dir }}/base.json"
-    notify:
-      - systemctl restart consul
+  - name: Read remote Consul config
+    slurp:
+      src: "{{ consul_conf_dir }}/config.json"
+    register: slurped_consul_conf
 
-  - name: Configure consul acl
-    template:
-      src: acl.json.j2
-      dest: "{{ consul_conf_dir }}/acl.json"
-    when: consul_acl_enable
-    notify:
-      - systemctl restart consul
+  - set_fact:
+      remote_consul_config: "{{ slurped_consul_conf['content'] | b64decode | from_json }}"
 
-- name: Configure consul
+  - name: Merge configs
+    set_fact:
+      consul_config: "{{ remote_consul_config | combine(consul_config, recursive=True) }}"
+
+- name: Generate Consul Config
   template:
     src: config.json.j2
     dest: "{{ consul_conf_dir }}/config.json"
+    mode: 0640
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+  register: r_consul_conf
   notify:
+  - systemctl restart consul
+
+- name: Validate Consul Config
+  command: "/usr/local/bin/consul validate {{ consul_conf_dir }}"
+  when: r_consul_conf.changed
+
+- name: Start Consul
+  systemd:
+    name: consul
+    state: started
+  when: consul_manage_service
+
+- name: ACL
+  tags: acl
+  when: consul_server and acl_enabled and consul_acl_managed
+  block:
+    # TODO: After consul elected a leader and all peers joined
+    # the ACL API does into legacy mode for a moment and returns HTTP 500.
+    # So we wait 'til re receive 200
+    # Maybe solve it better.
+  - name: Wait for Consul to be ready
+    uri:
+      url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policies"
+      method: GET
+      headers:
+        X-Consul-Token: "{{ vault_consul_master_token }}"
+    run_once: true
+    register: r_health
+    until: r_health.status == 200
+
+  - import_tasks: acl/lookup/policies.yml
+
+  - import_tasks: acl/policies.yml
+
+  - import_tasks: acl/lookup/tokens.yml
+
+  - import_tasks: acl/tokens.yml
+
+- name: Token Secrets
+  tags: tokens
+  when: acl_enabled and consul_acl_managed
+  block:
+  - import_tasks: acl/lookup/tokens.yml
+
+  - include_tasks: acl/lookup/secrets.yml
+    with_dict: "{{ consul_token_mapping }}"
+
+  - set_fact:
+      agent_tokens:
+        acl:
+          tokens: "{{ secrets }}"
+
+  - name: Inject Tokens into Consul config
+    set_fact:
+      consul_config: "{{ consul_config | combine(agent_tokens, recursive=True) }}"
+
+  - name: Generate Consul Config
+    template:
+      src: config.json.j2
+      dest: "{{ consul_conf_dir }}/config.json"
+      mode: 0640
+      owner: "{{ consul_user }}"
+      group: "{{ consul_group }}"
+    register: r_consul_conf
+    notify:
     - systemctl restart consul
+
+  - name: Validate Consul Config
+    command: "/usr/local/bin/consul validate {{ consul_conf_dir }}"
+    when: r_consul_conf.changed
 

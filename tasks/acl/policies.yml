@@ -1,0 +1,33 @@
+---
+
+- name: Create ACL policies
+  uri:
+    url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policy"
+    method: PUT
+    headers:
+      X-Consul-Token: "{{ vault_consul_master_token }}"
+    body_format: json
+    body:
+      Name: "{{ item.name }}"
+      Description: "{{ item.description | default('') }}"
+      Rules: "{{ item.policies | to_json }}"
+      Datacenter: "{{ item.datacenter | default('') }}"
+  loop: "{{ consul_acl_policies }}"
+  run_once: true
+  when: item.name not in acl_policy_map.keys()
+
+- name: Update ACL policies
+  uri:
+    url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policy/{{ acl_policy_map.get(item.name) }}"
+    method: PUT
+    headers:
+      X-Consul-Token: "{{ vault_consul_master_token }}"
+    body_format: json
+    body:
+      Name: "{{ item.name }}"
+      Description: "{{ item.description | default('') }}"
+      Rules: "{{ item.policies | to_json }}"
+      Datacenter: "{{ item.datacenter | default('') }}"
+  loop: "{{ consul_acl_policies }}"
+  run_once: true
+  when: item.name in acl_policy_map.keys()

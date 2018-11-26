@@ -13,23 +13,12 @@
 
   - name: Install consul
     import_tasks: install.yml
+    tags: install
 
-- name: Configure
-  tags:
-  - config
-  block:
-  - name: Configure consul
-    import_tasks: configure.yml
+- import_tasks: configure.yml
+  tags: config
 
-  - name: Create systemd Unit File
-    template:
-      src: consul.systemd.j2
-      dest: /usr/lib/systemd/system/consul.service
-    notify:
-    - systemctl daemon-reload
-
-- name: Start Consul
-  systemd:
-    name: consul
-    state: started
-  when: consul_manage_service
+- name: Configure Consul Services
+  import_tasks: service.yml
+  tags: services
+  when: consul_services is defined

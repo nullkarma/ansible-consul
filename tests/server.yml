@@ -2,9 +2,9 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - consul
+  - consul
   vars:
-    consul_single_config: true
+    consul_single_config: false
     consul_config:
       data_dir: "/opt/consul/data"
       bind_addr: "0.0.0.0"

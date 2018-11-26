@@ -27,4 +27,7 @@ platforms:
 suites:
   - name: server
     provisioner:
-      playbook: tests/server.yml
+      playbook: tests/single-config.yml
+  - name: server
+    provisioner:
+      playbook: tests/split-config.yml

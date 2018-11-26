@@ -1,0 +1,17 @@
+---
+
+- name: Gather Policies
+  uri:
+    url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policies"
+    method: GET
+    headers:
+      X-Consul-Token: "{{ vault_consul_master_token }}"
+      Content-Type: application/json
+  register: r_policies
+  run_once: true
+
+- name: Generate ACL Policy fact
+  set_fact:
+    acl_policy_map: "{{ acl_policy_map | default({}) | combine({item.0: item.1}) }}"
+  loop: "{{ r_policies.json | default([]) | json_query('[*].[Name, ID]') }}"
+

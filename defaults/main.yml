@@ -1,31 +1,99 @@
 ---
 
-consul_version: 1.2.0
+consul_version: 1.4.0
 consul_base_url: "https://releases.hashicorp.com/consul/{{ consul_version }}"
 
 consul_user: consul
 consul_group: consul
 
 consul_home_dir: /opt/consul
-consul_data_dir: /opt/consul/data
-consul_conf_dir: /etc/consul.d
+consul_pid_dir: /var/run/consul
+consul_config_root: /etc/consul
 
-consul_manage_service: False
+consul_manage_service: true
+consul_restart_on_change: true
 
 # Config
+#
 
-consul_acl_enable: False
-
-consul_base:
-  bind_addr: 0.0.0.0
-  datacenter: dc1
-  enable_syslog: True
-  node_name: "{{ ansible_hostname }}"
-  data_dir: "{{ consul_data_dir }}"
-
-consul_single_config: False
+consul_acl_managed: true
 
 consul_config:
-  server: True
+  server: true
   bootstrap_expect: 1
+  bind_addr: 0.0.0.0
+  datacenter: dc1
+  enable_syslog: true
+  node_name: "{{ ansible_hostname }}"
+  data_dir: /opt/consul/data
+  disable_remote_exec: true
+  enable_script_checks: true
+  ports:
+    http: 8500
+    https: 8501
+  encrypt: "wB7vXXK233ObfFsWGtzacQ=="
+  verify_incoming: false
+  verify_outgoing: false
+  primary_datacenter: dc1
+  acl:
+    enabled: true
+    default_policy: deny
+    down_policy: extend-cache
+    tokens:
+      master: 14B4C2E8-7F37-4F31-B1E8-FE79C4A26753
+
+# ACL
+#
+
+consul_token_mapping:
+  agent: "Agent Token"
+
+consul_acl_tokens:
+- description: Agent Token
+  policies:
+  - name: agents
+
+- description: UI Token
+  policies:
+  - name: ui-read-only
+
+- description: Anonymous Token
+  policies:
+  - name: list-all-nodes
+  - name: service-consul-read
+
+consul_acl_policies:
+- name: agents
+  description: Agent Token Policy
+  policies:
+    node_prefix:
+      "":
+        policy: write
+    service_prefix:
+      "":
+        policy: read
+
+- name: service-consul-read
+  description: Read permission for consul service
+  policies:
+    service:
+      "consul":
+        policy: read
+
+- name: list-all-nodes
+  description: Allow listing nodes
+  policies:
+    node_prefix:
+      "":
+        policy: read
+
+- name: ui-read-only
+  description: Read only access for UI
+  policies:
+    node_prefix:
+      "":
+        policy: read
+    service_prefix:
+      "":
+        policy: read
 

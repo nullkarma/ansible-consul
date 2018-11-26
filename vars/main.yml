@@ -1,0 +1,4 @@
+---
+
+consul_conf_dir: "{{ consul_config_root }}/conf.d"
+consul_acl_dir: "{{ consul_config_root }}/acl.d"

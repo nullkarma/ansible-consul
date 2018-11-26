@@ -1,0 +1,31 @@
+---
+
+- name: Create ACL Tokens
+  uri:
+    url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/token"
+    method: PUT
+    headers:
+      X-Consul-Token: "{{ vault_consul_master_token }}"
+    body_format: json
+    body:
+      Description: "{{ item.description | default('') }}"
+      Policies: "{{ item.policies }}"
+      Local: "{{ item.local | default(false) }}"
+  loop: "{{ consul_acl_tokens }}"
+  run_once: true
+  when: item.description not in acl_tokens.keys()
+
+- name: Update ACL Tokens
+  uri:
+    url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/token/{{ acl_tokens.get(item.description) }}"
+    method: PUT
+    headers:
+      X-Consul-Token: "{{ vault_consul_master_token }}"
+    body_format: json
+    body:
+      Description: "{{ item.description | default('') }}"
+      Policies: "{{ item.policies }}"
+      Local: "{{ item.local | default(false) }}"
+  loop: "{{ consul_acl_tokens }}"
+  run_once: true
+  when: item.description in acl_tokens.keys()

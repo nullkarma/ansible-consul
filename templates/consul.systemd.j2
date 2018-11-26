@@ -4,11 +4,15 @@ After=network.target
 
 [Service]
 User={{ consul_user }}
-ExecStart={{ consul_bin_dir }}/consul agent -config-dir={{ consul_conf_dir }}
+PIDFile={{ consul_pid_dir }}/consul.pid
+ExecStart={{ consul_bin_dir }}/consul agent -config-dir={{ consul_conf_dir }} -pid-file={{ consul_pid_dir }}/consul.pid
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill $MAINPID
+KillMode=process
+KillSignal=SIGTERM
 TimeoutStopSec=600
-Restart=always
+Restart=on-failure
+RestartSec=42s
 
 LimitNOFILE=65536
 [Install]
