@@ -13,6 +13,7 @@ consul_config_root: /etc/consul
 consul_manage_service: true
 consul_restart_on_change: true
 
+consul_server_group: consul-servers
 # Config
 #
 
@@ -30,7 +31,6 @@ consul_config:
   enable_script_checks: true
   ports:
     http: 8500
-    https: 8501
   encrypt: "wB7vXXK233ObfFsWGtzacQ=="
   verify_incoming: false
   verify_outgoing: false

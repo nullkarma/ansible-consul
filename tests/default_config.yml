@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  roles:
+  - consul
+  vars:
+    consul_server_group: localhost
+    vault_consul_master_token: 14B4C2E8-7F37-4F31-B1E8-FE79C4A26753

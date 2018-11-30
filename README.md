@@ -54,6 +54,7 @@ consul_acl_tokens:
 |consul_group|`consul`||
 |consul_home_dir|`/opt/consul`||
 |consul_conf_dir|`/etc/consul`||
+|consul_server_group|`consul-servers`|Inventory group in which the Consul Servers are. (Used for dynamic lookup of Servers)|
 |consul_manage_service|`true`|Manage Service start and restart|
 |consul_restart_on_change|`true`|Service restart on config change|
 |consul_acl_managed|`true`|Manage ACL completely with ansible|

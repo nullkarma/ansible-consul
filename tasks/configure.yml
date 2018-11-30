@@ -5,7 +5,7 @@
   tags: always
 
 - set_fact:
-    consul_host: "{{ groups['consul-servers'] | first }}"
+    consul_host: "{{ groups[consul_server_group] | first }}"
   tags: always
 
 - set_fact:
@@ -26,6 +26,19 @@
 
 - set_fact:
     consul_schema: "{% if consul_config.ports.https is defined %}https{% else %}http{% endif %}"
+
+- name: Generate Consul unit file
+  template:
+    src: consul.systemd.j2
+    dest: "/usr/lib/systemd/system/consul.service"
+  register: r_consul_service
+  notify:
+  - systemctl restart consul
+
+- systemd:
+    name: consul
+    daemon_reload: true
+  when: r_consul_service.changed
 
   # Since we're injecting the ACL agent and default token into the config
   # we want to merge an existing consul config into the new one
