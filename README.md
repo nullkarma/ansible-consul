@@ -6,10 +6,10 @@ Manage HashiCorp Consul (>=1.4.0) with Ansible
 
 This role is capable of bootstrapping your Consul Cluster, manage ACL Policies, Tokens and Token-Policy bindings.
 By default Ansible will bootstrap an ACL enabled Cluster with all necessary Policies and Tokens configured to enable DNS Lookups, Read-only UI access and Agent access. See `defaults/main.yml` for more information.
-Unlike the `acl.token.master` and the anonymous Token, `acl.token.agent` and `acl.token.default` will **not** be automatically provisioned in the system by simply setting them in your Consul configuration. Therefore a double restart of your Cluster is required. The initial start with `acl.enabled: true` will enable ACL and bind the global policy to your Master Token. This is where additional Tokens and Policies need to be created and `acl.token.agent` has to be added to each Consul Server (and Client) config, before you do the second Cluster restart and have your Consul up and running.
+Unlike the `acl.tokens.master` and the anonymous Token, `acl.tokens.agent` and `acl.tokens.default` will **not** be automatically provisioned in the system by simply setting them in your Consul configuration. Therefore a double restart of your Cluster is required. The initial start with `acl.enabled: true` will enable ACL and bind the global policy to your Master Token. This is where additional Tokens and Policies need to be created and `acl.tokens.agent` has to be added to each Consul Server (and Client) config, before you do the second Cluster restart and have your Consul up and running.
 
 With `consul_acl_managed: true` Ansible will Autopilot this bootstrap process and **persist** Tokens in your configs.
-You only provide the `acl.token.master` in your Servers `consul_config` and omit `acl.token.agent` and `acl.token.default` in Servers and Clients. After the initial Cluster up, Agent Tokens will be injected into the config and the 2nd restart will be executed.
+You only provide the `acl.tokens.master` in your Servers `consul_config` and omit `acl.tokens.agent` and `acl.tokens.default` in Servers and Clients. After the initial Cluster up, Agent Tokens will be injected into the config and the 2nd restart will be executed.
 To inject a Token into your config dynamically, you have to provide a Token-Policy map.
 
 ```yaml
@@ -17,8 +17,8 @@ consul_token_mapping:
   agent: "Agent Token"
 ```
 
-`agent` is short for `acl.token.agent`.
-In the example above, the Token with the Description "Agent Token" will be injected into `acl.token.agent`.
+`agent` is short for `acl.tokens.agent`.
+In the example above, the Token with the Description "Agent Token" will be injected into `acl.tokens.agent`.
 
 ### Policies
 
