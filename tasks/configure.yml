@@ -83,6 +83,9 @@
   tags: acl
   when: consul_server and acl_enabled and consul_acl_managed
   block:
+  - set_fact:
+      consul_token: "{{ consul_config.acl.tokens.master }}"
+
     # TODO: After consul elected a leader and all peers joined
     # the ACL API does into legacy mode for a moment and returns HTTP 500.
     # So we wait 'til re receive 200

@@ -5,7 +5,7 @@
     url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policies"
     method: GET
     headers:
-      X-Consul-Token: "{{ vault_consul_master_token }}"
+      X-Consul-Token: "{{ consul_token }}"
       Content-Type: application/json
   register: r_policies
   run_once: true

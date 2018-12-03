@@ -5,7 +5,7 @@
     url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policy"
     method: PUT
     headers:
-      X-Consul-Token: "{{ vault_consul_master_token }}"
+      X-Consul-Token: "{{ consul_token }}"
     body_format: json
     body:
       Name: "{{ item.name }}"
@@ -21,7 +21,7 @@
     url: "{{ consul_schema }}://{{ consul_host }}:{{ consul_port }}/v1/acl/policy/{{ acl_policy_map.get(item.name) }}"
     method: PUT
     headers:
-      X-Consul-Token: "{{ vault_consul_master_token }}"
+      X-Consul-Token: "{{ consul_token }}"
     body_format: json
     body:
       Name: "{{ item.name }}"
